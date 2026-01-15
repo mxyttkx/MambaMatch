@@ -1,1 +1,82 @@
 # MambaMatch
+(TIP 2024) PyTorch implementation of Paper "MambaMatch: Establishing Reliable Correspondences via Multi-Scale State Space Model"
+
+## Requirements
+Please use Python 3.6, opencv-contrib-python (3.4.0.12) and Pytorch (>= 1.1.0). Other dependencies should be easily installed through pip or conda.
+
+# Mamba Block: Integration Guide
+This guide offers instructions for integrating the Mamba and FusionMamba blocks into the network.
+
+## Installation
+1. Install the official Mamba library by following the instructions in the [hustvl/Vim](https://github.com/hustvl/Vim) repository. The head should be point at `b9cf48f`, to achieve this, by run `git checkout b9cf48f`, then install the Vim by following the repo at b9cf48f. In our practice, it's necessary to add `pip install causal_conv1d==1.1.0` after completing all installation steps in Vim.
+2. After installing the official Mamba library, replace the mamba_simpy.py file in the installation directory (./Vim/mamba-1p1p1/mamba_ssm/modules/) with the one provided in this mamba block directory.
+3. Please do not install Mamba directly using `pip install mamba-ssm`!
+
+# Preparing Data
+Please follow their instructions to download the training and testing data.
+```bash
+bash download_data.sh raw_data raw_data_yfcc.tar.gz 0 8 ## YFCC100M
+tar -xvf raw_data_yfcc.tar.gz
+
+bash download_data.sh raw_sun3d_test raw_sun3d_test.tar.gz 0 2 ## SUN3D
+tar -xvf raw_sun3d_test.tar.gz
+bash download_data.sh raw_sun3d_train raw_sun3d_train.tar.gz 0 63
+tar -xvf raw_sun3d_train.tar.gz
+```
+ 
+After downloading the datasets, the initial matches for YFCC100M and SUN3D can be generated as following. Here we provide descriptors for SIFT (default), ORB, and SuperPoint.
+```bash
+cd dump_match
+python extract_feature.py
+python yfcc.py
+python extract_feature.py --input_path=../raw_data/sun3d_test
+python sun3d.py
+```
+
+# Testing and Training Model
+We provide a pretrained model on YFCC100M. The results in our paper can be reproduced by running the test script:
+```bash
+cd core 
+python main.py --run_mode=test --model_path=../model/yfcc --res_path=../model/yfcc 
+```
+Set `--use_ransac=True` to get results after RANSAC post-processing.
+
+If you want to retrain the model on YFCC100M, run the tranining script.
+```bash
+cd core 
+python main.py 
+```
+
+You can also retrain the model on SUN3D by modifying related settings in `code\config.py`.
+
+# Citing MambaMatch
+If you find the BCLNet code useful, please consider citing:
+
+```bibtex
+@article{miao2025mambamatch,
+  title={MambaMatch: Establishing Reliable Correspondences via Multi-Scale State Space Model},
+  author={Miao, Xiangyang and Chen, Shunxing and Liu, Xinyu and Wang, Shiping and Du, Songlin and He, Lianghua and Xiao, Guobao},
+  journal={IEEE Transactions on Image Processing},
+  volume={34},
+  pages={7528--7541},
+  year={2025},
+  publisher={IEEE}
+}
+```
+
+# Acknowledgement
+This code is heavily borrowed from [[OANet](https://github.com/zjhthu/OANet)] [[CLNet](https://github.com/sailor-z/CLNet)]. If you use the part of code related to data generation, testing, or evaluation, you should cite these papers:
+```bibtex
+@inproceedings{zhang2019oanet,
+  title={Learning Two-View Correspondences and Geometry Using Order-Aware Network},
+  author={Zhang, Jiahui and Sun, Dawei and Luo, Zixin and Yao, Anbang and Zhou, Lei and Shen, Tianwei and Chen, Yurong and Quan, Long and Liao, Hongen},
+  journal={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  year={2019}
+}
+@inproceedings{zhao2021clnet,
+  title={Progressive Correspondence Pruning by Consensus Learning},
+  author={Zhao, Chen and Ge, Yixiao and Zhu, Feng and Zhao, Rui and Li, Hongsheng and Salzmann, Mathieu},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  year={2021}
+}
+``` 
